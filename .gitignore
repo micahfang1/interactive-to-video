@@ -1,0 +1,6 @@
+node_modules/
+work/
+out/
+voice/
+__pycache__/
+.DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "interactive-to-video",
+  "version": "0.1.0",
+  "description": "Turn an interactive web page into a full narrated video: a headless browser walks through it, records screen and audio, and adds cloned-voice narration.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node lib/make.mjs examples/demo/demo.mjs"
+  }
+}

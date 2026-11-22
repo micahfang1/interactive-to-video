@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>钱多久翻一倍</title>
+<style>
+  :root { --ink: #1f1b16; --soft: #6b5f52; --paper: #f7f3ec; --card: #fffdf8; --line: #e2d9c8; --accent: #c2410c; --good: #2f7d4f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 23px/1.7 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 0 24px 160px; }
+  header { padding: 72px 0 24px; }
+  h1 { font-size: 64px; line-height: 1.2; margin: 0 0 12px; }
+  h2 { font-size: 34px; margin: 72px 0 12px; }
+  .lead { color: var(--soft); font-size: 26px; margin: 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px 28px; margin: 24px 0; }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  button { font: inherit; padding: 10px 22px; border-radius: 999px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+  button:hover { background: #efe7d8; }
+  button.picked { background: var(--ink); color: var(--paper); }
+  button.right { border-color: var(--good); background: var(--good); color: #fff; }
+  #reveal { margin: 16px 0 0; min-height: 1.7em; color: var(--soft); }
+  label { display: flex; align-items: center; gap: 16px; font-weight: 600; }
+  input[type=range] { flex: 1; accent-color: var(--accent); height: 28px; }
+  output { font: 700 26px/1 ui-monospace, Menlo, monospace; color: var(--accent); min-width: 3.2em; text-align: right; }
+  svg { display: block; width: 100%; height: auto; margin-top: 18px; }
+  .bar { fill: #d9cdb8; transition: height .25s, y .25s, fill .25s; }
+  .bar.over { fill: var(--accent); }
+  .goal { stroke: var(--ink); stroke-dasharray: 6 6; stroke-width: 1.5; }
+  .axis { fill: var(--soft); font-size: 12px; }
+  #verdict { font-size: 26px; margin: 14px 0 0; }
+  #verdict b { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  td, th { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  tr.now td { background: #fbeee4; font-weight: 600; }
+  footer { margin-top: 80px; color: var(--soft); font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>钱多久翻一倍？</h1>
+    <p class="lead">每年涨 7%，听起来不多。可它翻倍比你想的快。</p>
+  </header>
+
+  <section id="guess" class="card">
+    <strong>先猜一下</strong>
+    <p>一万块，每年涨 7%，利息接着生利息。大概多少年变成两万？</p>
+    <div class="choices">
+      <button data-years="14">14 年</button>
+      <button data-years="10">10 年</button>
+      <button data-years="7">7 年</button>
+    </div>
+    <p id="reveal"></p>
+  </section>
+
+  <h2 id="lab-title">自己拖一拖</h2>
+  <section id="lab" class="card">
+    <label>每年涨 <input id="rate" type="range" min="1" max="15" step="1" value="7"> <output id="rateOut">7%</output></label>
+    <svg id="chart" viewBox="0 0 700 250" role="img" aria-label="三十年里本金的变化"></svg>
+    <p id="verdict"></p>
+  </section>
+
+  <h2 id="rule-title">一个好记的办法</h2>
+  <section id="rule" class="card">
+    <p>拿 72 除以每年涨的百分数，得到的就是翻倍大约要几年。</p>
+    <table>
+      <thead><tr><th>每年涨</th><th>72 ÷ 它</th><th>真实的年数</th></tr></thead>
+      <tbody id="ruleRows"></tbody>
+    </table>
+  </section>
+
+  <footer>这是 interactive-to-video 的示例页，专门用来试录。</footer>
+</main>
+<script>
+  const YEARS = 30;
+  const $ = (s) => document.querySelector(s);
+  // 翻倍要几年（精确值）
+  const doubling = (pct) => Math.log(2) / Math.log(1 + pct / 100);
+
+  // 先猜
+  document.querySelectorAll('[data-years]').forEach((b) => b.addEventListener('click', () => {
+    if ($('#guess').dataset.done) return;
+    $('#guess').dataset.done = '1';
+    b.classList.add('picked');
+    document.querySelector('[data-years="10"]').classList.add('right');
+    $('#reveal').textContent = b.dataset.years === '10' ? '对，大约 10 年。' : '是大约 10 年。7% 一年年叠上去，比直觉快。';
+  }));
+
+  // 柱状图：每年一根，过了两倍线的变色
+  const NS = 'http://www.w3.org/2000/svg';
+  const chart = $('#chart'), W = 700, H = 250, BASE = 212, TOP = 16, MAXV = 4;
+  const el = (name, attrs) => { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); chart.append(e); return e; };
+  const yOf = (v) => BASE - Math.min(v, MAXV) / MAXV * (BASE - TOP);
+  const bars = [];
+  for (let i = 0; i <= YEARS; i++) bars.push(el('rect', { class: 'bar', x: 8 + i * 22, width: 17, y: BASE, height: 0, rx: 3 }));
+  el('line', { class: 'goal', x1: 0, x2: W, y1: yOf(2), y2: yOf(2) });
+  const goalLabel = el('text', { class: 'axis', x: W - 4, y: yOf(2) - 6, 'text-anchor': 'end' }); goalLabel.textContent = '两倍';
+  for (const y of [0, 10, 20, 30]) { const t = el('text', { class: 'axis', x: 8 + y * 22 + 8, y: H - 12, 'text-anchor': 'middle' }); t.textContent = `第 ${y} 年`; }
+
+  function draw() {
+    const pct = +$('#rate').value;
+    $('#rateOut').textContent = pct + '%';
+    bars.forEach((b, i) => {
+      const v = Math.pow(1 + pct / 100, i), y = yOf(v);
+      b.setAttribute('y', y); b.setAttribute('height', BASE - y); b.classList.toggle('over', v >= 2);
+    });
+    const n = doubling(pct);
+    $('#verdict').innerHTML = n <= YEARS ? `每年涨 ${pct}%，大约 <b>${n.toFixed(1)} 年</b>翻一倍。` : `每年涨 ${pct}%，三十年都翻不了一倍（要 <b>${n.toFixed(0)} 年</b>）。`;
+    document.querySelectorAll('#ruleRows tr').forEach((r) => r.classList.toggle('now', +r.dataset.pct === pct));
+  }
+  $('#rate').addEventListener('input', draw);
+
+  // 72 法则对照表
+  $('#ruleRows').innerHTML = [2, 4, 6, 7, 9, 12].map((p) => `<tr data-pct="${p}"><td>${p}%</td><td>${(72 / p).toFixed(1)} 年</td><td>${doubling(p).toFixed(1)} 年</td></tr>`).join('');
+  draw();
+</script>
+</body>
+</html>
