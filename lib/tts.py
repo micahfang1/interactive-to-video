@@ -16,8 +16,8 @@ import numpy as np
 
 sys.path.insert(0, os.environ.get("INDEXTTS_DIR") or os.getcwd())
 REF = os.environ.get("VOICE_REF", "")
-TARGET_CPS = float(os.environ.get("TTS_CPS", "5.0"))  # 目标语速：每秒几个字（不算停顿）
-MAX_PAUSE = 0.38  # 句中停顿最长留这么久（秒）
+TARGET_CPS = float(os.environ.get("TTS_CPS", "5.8"))  # 目标语速：每秒几个字（不算停顿）。11-26 用户嫌 5.0 偏慢，调到 5.8
+MAX_PAUSE = float(os.environ.get("TTS_MAX_PAUSE", "0.3"))  # 句中停顿最长留这么久（秒）
 TRIES = 3
 VERSION = "idx-v1"  # 改了后处理就加一，旧的缓存作废
 PUNCT = re.compile(r"[，。？！、：；\s「」“”（）()…]")

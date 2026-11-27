@@ -48,8 +48,8 @@ test('SRT：序号从 1 开始，条目之间空一行', () => {
 test('估时长：字越多越长，标点不算字但算停顿，最短 1.2 秒', () => {
   assert.equal(estimateDuration('好'), 1.2);
   assert.equal(estimateDuration(''), 1.2);
-  const plain = estimateDuration('一二三四五六七八九'); // 9 个字 = 2 秒
-  assert.ok(Math.abs(plain - 2) < 1e-9);
+  const plain = estimateDuration('一二三四五六七八九'); // 9 个字，每秒 5.4 字
+  assert.ok(Math.abs(plain - 9 / 5.4) < 1e-9);
   assert.ok(estimateDuration('一二三四，五六七八九。') > plain);
   assert.ok(estimateDuration('一二三四五六七八九十一二三四五六七八') > plain);
 });
